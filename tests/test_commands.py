@@ -188,6 +188,91 @@ class FileOperationTests(unittest.TestCase):
 
         run.assert_not_called()
 
+    @patch("commands.subprocess.run")
+    def test_run_file_cancelled_by_user(self, run):
+        self.workspace_dir.mkdir()
+        script = self.workspace_dir / "test.py"
+        script.write_text("print('test')")
+        with patch("builtins.input", return_value="no"):
+            output = self.capture_output("run test.py")
+        self.assertIn("Run cancelled.", output)
+        run.assert_not_called()
+
+    @patch("commands.subprocess.run")
+    def test_run_file_times_out_gracefully(self, run):
+        self.workspace_dir.mkdir()
+        script = self.workspace_dir / "slow.py"
+        script.write_text("import time; time.sleep(20)")
+        run.side_effect = commands.subprocess.TimeoutExpired(
+            cmd=["python3", str(script)], timeout=10
+        )
+        with patch("builtins.input", return_value="yes"):
+            output = self.capture_output("run slow.py")
+        self.assertIn("Stopped after 10 seconds because the program took too long.", output)
+        run.assert_called_once()
+
+    @patch("commands.subprocess.run")
+    def test_run_file_handles_missing_interpreter(self, run):
+        self.workspace_dir.mkdir()
+        script = self.workspace_dir / "test.py"
+        script.write_text("print('test')")
+        run.side_effect = FileNotFoundError()
+        with patch("builtins.input", return_value="yes"):
+            output = self.capture_output("run test.py")
+        self.assertIn("⚠️ Command not available: python3", output)
+        run.assert_called_once()
+
+    @patch("commands.subprocess.run")
+    def test_edit_file_handles_unavailable_editor(self, run):
+        self.workspace_dir.mkdir()
+        (self.workspace_dir / "notes.txt").write_text("hello")
+        run.side_effect = FileNotFoundError()
+        output = self.capture_output("edit notes.txt")
+        self.assertIn("⚠️ Editor not available: nano", output)
+        run.assert_called_once()
+
+    @patch("commands.subprocess.run")
+    def test_path_resolving_outside_workspace_blocked(self, run):
+        self.workspace_dir.mkdir()
+        outside_target = self.project_dir / "secret.py"
+        outside_target.write_text("print('secret')")
+        symlink = self.workspace_dir / "symlink.py"
+        try:
+            symlink.symlink_to(outside_target)
+        except OSError:
+            pass
+        else:
+            output = self.capture_output("run symlink.py")
+            self.assertIn("Blocked path outside the workspace folder.", output)
+            run.assert_not_called()
+
+    @patch("commands.subprocess.run")
+    def test_path_resolving_outside_project_dir_blocked(self, run):
+        outside_target = self.project_dir.parent / "escape.txt"
+        symlink = self.project_dir / "symlink.txt"
+        try:
+            symlink.symlink_to(outside_target)
+        except OSError:
+            pass
+        else:
+            output = self.capture_output("touch symlink.txt")
+            self.assertIn("Blocked path outside the current project directory.", output)
+            run.assert_not_called()
+
+    @patch("commands.subprocess.run")
+    def test_run_file_nonexistent_workspace_file(self, run):
+        self.workspace_dir.mkdir()
+        output = self.capture_output("run nonexistent.py")
+        self.assertIn("File does not exist in workspace: nonexistent.py", output)
+        run.assert_not_called()
+
+    @patch("commands.subprocess.run")
+    def test_make_executable_nonexistent_workspace_file(self, run):
+        self.workspace_dir.mkdir()
+        output = self.capture_output("make nonexistent.sh executable")
+        self.assertIn("File does not exist in workspace: nonexistent.sh", output)
+        run.assert_not_called()
+
 
 class CommandRoutingTests(unittest.TestCase):
     @patch("commands.run_command")
@@ -233,6 +318,22 @@ class CommandRoutingTests(unittest.TestCase):
         self.assertIn("rephras", output)
         run_command.assert_not_called()
         launch_background.assert_not_called()
+
+    @patch("commands.subprocess.run", side_effect=FileNotFoundError)
+    def test_run_command_handles_unavailable_command(self, run):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            commands.run_command(["nonexistent_tool", "--arg"])
+        self.assertIn("⚠️ Command not available: nonexistent_tool", output.getvalue())
+        run.assert_called_once_with(["nonexistent_tool", "--arg"], check=False)
+
+    @patch("commands.subprocess.Popen", side_effect=FileNotFoundError)
+    def test_launch_background_handles_unavailable_command(self, popen):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            commands.launch_background(["nonexistent_gui"])
+        self.assertIn("⚠️ Command not available: nonexistent_gui", output.getvalue())
+        popen.assert_called_once_with(["nonexistent_gui"])
 
 
 if __name__ == "__main__":
