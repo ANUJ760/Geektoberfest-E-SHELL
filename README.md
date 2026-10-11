@@ -181,6 +181,14 @@ You can also use the helper script:
 ./run.sh
 ```
 
+### Debug mode
+
+By default, internal classification details are not printed during regular command execution. To enable intent prediction debug messages for troubleshooting, set `ESHELL_DEBUG=1`:
+
+```bash
+ESHELL_DEBUG=1 ./run.sh
+```
+
 ## How to run the tests
 
 E-SHELL includes a small standard-library test suite for safe file handling, fallback command routing, and the new intents:

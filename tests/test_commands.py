@@ -234,6 +234,22 @@ class CommandRoutingTests(unittest.TestCase):
         run_command.assert_not_called()
         launch_background.assert_not_called()
 
+    @patch("commands.run_command")
+    @patch("commands.predict_intent", return_value="python_version")
+    def test_classifier_debug_output_hidden_by_default(self, _predict_intent, _run_command):
+        output = io.StringIO()
+        with redirect_stdout(output), patch.dict("os.environ", {}, clear=True):
+            commands.handle_command("python version")
+        self.assertNotIn("[DEBUG] Predicted intent:", output.getvalue())
+
+    @patch("commands.run_command")
+    @patch("commands.predict_intent", return_value="python_version")
+    def test_classifier_debug_output_opt_in_via_env(self, _predict_intent, _run_command):
+        output = io.StringIO()
+        with redirect_stdout(output), patch.dict("os.environ", {"ESHELL_DEBUG": "1"}):
+            commands.handle_command("python version")
+        self.assertIn("[DEBUG] Predicted intent: python_version", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

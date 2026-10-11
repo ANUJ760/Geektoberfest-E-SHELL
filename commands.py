@@ -401,6 +401,11 @@ def print_unknown_feedback(text):
     print("   - Or try rephrasing, for example: 'disk usage', 'cpu info', or 'who am i'.")
 
 
+def is_debug_enabled():
+    """Return True if debugging output is requested via environment variable."""
+    return os.environ.get("ESHELL_DEBUG", "").lower() in ("1", "true", "yes") or os.environ.get("DEBUG", "").lower() in ("1", "true", "yes")
+
+
 def handle_command(text):
     words = parse_words(text)
     if not words:
@@ -451,7 +456,8 @@ def handle_command(text):
         return
 
     intent = predict_intent(text)
-    print(f"[DEBUG] Predicted intent: {intent}")
+    if is_debug_enabled():
+        print(f"[DEBUG] Predicted intent: {intent}")
 
     handlers = {
         "list_files": lambda: run_command(["ls"]),
