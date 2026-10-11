@@ -1,8 +1,12 @@
 import datetime
+import getpass
 import os
+import platform
 import shlex
 import shutil
+import socket
 import subprocess
+import sys
 from pathlib import Path
 
 from model import predict_intent
@@ -234,8 +238,11 @@ def handle_make_executable(words):
         print(f"File does not exist in workspace: {path.name}")
         return
 
-    subprocess.run(["chmod", "+x", str(path)], check=False)
-    print(f"Made executable: {path.name}")
+    try:
+        subprocess.run(["chmod", "+x", str(path)], check=False)
+        print(f"Made executable: {path.name}")
+    except FileNotFoundError:
+        print("⚠️ Command not available: chmod")
 
 
 def ask_before_first_run(path):
@@ -371,9 +378,197 @@ def show_environment_info():
 
 
 def show_running_processes():
-    result = subprocess.run(["ps", "aux", "--sort=-%mem"], capture_output=True, text=True, check=False)
-    lines = result.stdout.splitlines()[:11]  # header plus the 10 largest processes
-    print("\n".join(lines))
+    if not shutil.which("ps"):
+        print("⚠️ ps is not installed, so running processes information is unavailable.")
+        return
+
+    try:
+        result = subprocess.run(["ps", "aux", "--sort=-%mem"], capture_output=True, text=True, check=False)
+        lines = result.stdout.splitlines()[:11]  # header plus the 10 largest processes
+        print("\n".join(lines))
+    except FileNotFoundError:
+        print("⚠️ ps is not installed, so running processes information is unavailable.")
+
+
+def show_disk_usage():
+    if shutil.which("df"):
+        run_command(["df", "-h"])
+        return
+
+    try:
+        usage = shutil.disk_usage("/")
+        total_gb = usage.total / (1024 ** 3)
+        used_gb = usage.used / (1024 ** 3)
+        free_gb = usage.free / (1024 ** 3)
+        print(f"Root filesystem (fallback): {used_gb:.1f}G used, {free_gb:.1f}G free, {total_gb:.1f}G total (df not installed)")
+    except Exception:
+        print("⚠️ Disk usage information is unavailable (df is not installed).")
+
+
+def show_memory_usage():
+    if shutil.which("free"):
+        run_command(["free", "-h"])
+        return
+
+    meminfo = Path("/proc/meminfo")
+    if meminfo.is_file():
+        try:
+            lines = meminfo.read_text().splitlines()
+            mem_data = {}
+            for line in lines:
+                parts = line.split(":")
+                if len(parts) == 2:
+                    mem_data[parts[0].strip()] = parts[1].strip()
+            total = mem_data.get("MemTotal")
+            available = mem_data.get("MemAvailable", mem_data.get("MemFree"))
+            if total and available:
+                print(f"Memory (fallback from /proc/meminfo): Total: {total}, Available: {available} (free not installed)")
+                return
+        except OSError:
+            pass
+
+    print("⚠️ Memory usage information is unavailable (free is not installed).")
+
+
+def show_system_uptime():
+    if shutil.which("uptime"):
+        run_command(["uptime"])
+        return
+
+    uptime_file = Path("/proc/uptime")
+    if uptime_file.is_file():
+        try:
+            total_seconds = float(uptime_file.read_text().split()[0])
+            hours, remainder = divmod(int(total_seconds), 3600)
+            minutes, _ = divmod(remainder, 60)
+            days, hours = divmod(hours, 24)
+            if days:
+                print(f"System uptime (fallback): {days} day(s), {hours} hour(s), {minutes} minute(s)")
+            else:
+                print(f"System uptime (fallback): {hours} hour(s), {minutes} minute(s)")
+            return
+        except (ValueError, OSError, IndexError):
+            pass
+
+    print("⚠️ System uptime is unavailable (uptime not installed).")
+
+
+def show_kernel_info():
+    if shutil.which("uname"):
+        run_command(["uname", "-a"])
+        return
+
+    print(f"Kernel info (fallback): {platform.platform()}")
+
+
+def show_cpu_info():
+    if shutil.which("lscpu"):
+        run_command(["lscpu"])
+        return
+
+    cpuinfo = Path("/proc/cpuinfo")
+    if cpuinfo.is_file():
+        try:
+            lines = cpuinfo.read_text().splitlines()
+            model_lines = [
+                line.split(":", 1)[1].strip()
+                for line in lines
+                if line.startswith("model name")
+            ]
+            if model_lines:
+                print(f"CPU (fallback from /proc/cpuinfo): {model_lines[0]} ({len(model_lines)} core(s)) (lscpu not installed)")
+                return
+        except OSError:
+            pass
+
+    print("⚠️ CPU information is unavailable (lscpu is not installed).")
+
+
+def show_current_user():
+    if shutil.which("whoami"):
+        run_command(["whoami"])
+        return
+
+    try:
+        print(getpass.getuser())
+    except Exception:
+        user = os.environ.get("USER") or os.environ.get("LOGNAME")
+        if user:
+            print(user)
+        else:
+            print("⚠️ Current user information is unavailable.")
+
+
+def show_hostname():
+    if shutil.which("hostname"):
+        run_command(["hostname"])
+        return
+
+    try:
+        print(socket.gethostname())
+    except Exception:
+        print("⚠️ Hostname is unavailable.")
+
+
+def show_os_info():
+    if shutil.which("lsb_release"):
+        run_command(["lsb_release", "-a"])
+        return
+
+    os_release = Path("/etc/os-release")
+    if os_release.is_file():
+        try:
+            print(os_release.read_text().strip())
+            return
+        except OSError:
+            pass
+
+    if shutil.which("uname"):
+        run_command(["uname", "-sro"])
+        return
+
+    print("⚠️ OS distribution information is unavailable.")
+
+
+def show_network_info():
+    if shutil.which("ip"):
+        run_command(["ip", "addr", "show"])
+        return
+
+    if shutil.which("ifconfig"):
+        run_command(["ifconfig"])
+        return
+
+    try:
+        hostname = socket.gethostname()
+        ip = socket.gethostbyname(hostname)
+        print(f"Network info (fallback): Host: {hostname}, IP: {ip} (ip/ifconfig not available)")
+    except Exception:
+        print("⚠️ Network information is unavailable (ip and ifconfig not installed).")
+
+
+def show_logged_in_users():
+    if shutil.which("who"):
+        run_command(["who"])
+        return
+
+    if shutil.which("w"):
+        run_command(["w"])
+        return
+
+    user = os.environ.get("USER")
+    if user:
+        print(f"Logged in user (fallback): {user}")
+    else:
+        print("⚠️ Logged in users information is unavailable (who is not installed).")
+
+
+def show_python_version():
+    if shutil.which("python3"):
+        run_command(["python3", "--version"])
+        return
+
+    print(f"Python {sys.version.split()[0]} (internal)")
 
 
 def show_package_manager_info():
@@ -456,26 +651,26 @@ def handle_command(text):
     handlers = {
         "list_files": lambda: run_command(["ls"]),
         "current_dir": lambda: run_command(["pwd"]),
-        "disk_usage": lambda: run_command(["df", "-h"]),
-        "memory_usage": lambda: run_command(["free", "-h"]),
+        "disk_usage": show_disk_usage,
+        "memory_usage": show_memory_usage,
         "date_time": lambda: print(datetime.datetime.now()),
-        "system_uptime": lambda: run_command(["uptime"]),
-        "kernel_info": lambda: run_command(["uname", "-a"]),
-        "cpu_info": lambda: run_command(["lscpu"]),
-        "current_user": lambda: run_command(["whoami"]),
-        "hostname": lambda: run_command(["hostname"]),
+        "system_uptime": show_system_uptime,
+        "kernel_info": show_kernel_info,
+        "cpu_info": show_cpu_info,
+        "current_user": show_current_user,
+        "hostname": show_hostname,
         "open_firefox": lambda: launch_background(["firefox"]),
         "calculator": lambda: launch_background(["gnome-calculator"]),
-        "os_info": lambda: run_command(["lsb_release", "-a"]) if shutil.which("lsb_release") else run_command(["cat", "/etc/os-release"]),
+        "os_info": show_os_info,
         "gpu_info": show_gpu_info,
         "battery_info": show_battery_info,
-        "network_info": lambda: run_command(["ip", "addr", "show"]),
-        "ip_address": lambda: run_command(["ip", "addr", "show"]),
-        "logged_in_users": lambda: run_command(["who"]),
+        "network_info": show_network_info,
+        "ip_address": show_network_info,
+        "logged_in_users": show_logged_in_users,
         "running_processes": show_running_processes,
         "environment_info": show_environment_info,
         "shell_info": lambda: print(os.environ.get("SHELL", "Unknown shell")),
-        "python_version": lambda: run_command(["python3", "--version"]),
+        "python_version": show_python_version,
         "package_manager_info": show_package_manager_info,
         "fastfetch_info": show_fastfetch_info,
     }

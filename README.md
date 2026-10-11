@@ -61,20 +61,20 @@ E-SHELL supports informational commands plus intentionally limited file actions.
 |---|---|
 | `list_files` | Shows files in the current directory with `ls`. |
 | `current_dir` | Shows the current directory with `pwd`. |
-| `disk_usage` | Shows storage usage with `df -h`. |
-| `memory_usage` | Shows memory usage with `free -h`. |
+| `disk_usage` | Shows storage usage with `df -h`, or Python disk usage calculation as fallback. |
+| `memory_usage` | Shows memory usage with `free -h`, or `/proc/meminfo` as fallback. |
 | `date_time` | Prints the current date and time. |
-| `system_uptime` | Shows how long the system has been running with `uptime`. |
-| `kernel_info` | Shows kernel/system details with `uname -a`. |
-| `cpu_info` | Shows CPU details with `lscpu`. |
-| `current_user` | Shows the logged-in user with `whoami`. |
-| `hostname` | Shows the machine name with `hostname`. |
-| `os_info` | Shows Linux distribution details with `lsb_release -a`, or `/etc/os-release` as a fallback. |
+| `system_uptime` | Shows how long the system has been running with `uptime`, or `/proc/uptime` as fallback. |
+| `kernel_info` | Shows kernel/system details with `uname -a`, or `platform` as fallback. |
+| `cpu_info` | Shows CPU details with `lscpu`, or `/proc/cpuinfo` as fallback. |
+| `current_user` | Shows the logged-in user with `whoami`, or `getpass`/`USER` as fallback. |
+| `hostname` | Shows the machine name with `hostname`, or `socket.gethostname` as fallback. |
+| `os_info` | Shows Linux distribution details with `lsb_release -a`, `/etc/os-release`, or `uname` as fallback. |
 | `gpu_info` | Shows GPU-related entries from `lspci` when available. |
 | `battery_info` | Reads non-destructive battery status from `/sys/class/power_supply`. |
-| `network_info` / `ip_address` | Shows network interfaces and IP addresses with `ip addr show`. |
-| `logged_in_users` | Shows logged-in users with `who`. |
-| `running_processes` | Shows the ten largest processes by memory usage. |
+| `network_info` / `ip_address` | Shows network interfaces with `ip addr show`, or `ifconfig`/host lookup as fallback. |
+| `logged_in_users` | Shows logged-in users with `who`, `w`, or `$USER` as fallback. |
+| `running_processes` | Shows the ten largest processes by memory usage with `ps` (with clear notice if missing). |
 | `environment_info` | Prints selected environment variables such as `USER`, `HOME`, and `PATH`. |
 | `shell_info` | Shows the current shell from the `SHELL` environment variable. |
 | `python_version` | Shows the installed Python version with `python3 --version`. |

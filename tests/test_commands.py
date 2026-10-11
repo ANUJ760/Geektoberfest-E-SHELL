@@ -132,6 +132,14 @@ class FileOperationTests(unittest.TestCase):
         run.assert_called_once_with(["chmod", "+x", str(script)], check=False)
         self.assertIn("Made executable: script.sh", output)
 
+    def test_unavailable_chmod_shows_friendly_warning(self):
+        self.workspace_dir.mkdir()
+        script = self.workspace_dir / "script.sh"
+        script.write_text("echo hello")
+        with patch("commands.subprocess.run", side_effect=FileNotFoundError):
+            output = self.capture_output("make script.sh executable")
+        self.assertIn("⚠️ Command not available: chmod", output)
+
     @patch("commands.subprocess.run")
     def test_run_python_file_asks_first_and_captures_output(self, run):
         self.workspace_dir.mkdir()
@@ -233,6 +241,61 @@ class CommandRoutingTests(unittest.TestCase):
         self.assertIn("rephras", output)
         run_command.assert_not_called()
         launch_background.assert_not_called()
+
+    @patch("commands.shutil.which", return_value=None)
+    def test_unavailable_ps_shows_friendly_warning(self, _which):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            commands.show_running_processes()
+        self.assertIn("⚠️ ps is not installed", output.getvalue())
+
+    @patch("commands.shutil.which", return_value=None)
+    def test_unavailable_uptime_uses_proc_fallback(self, _which):
+        output = io.StringIO()
+        with patch.object(Path, "is_file", return_value=True), patch.object(
+            Path, "read_text", return_value="3660.00 7000.00"
+        ), redirect_stdout(output):
+            commands.show_system_uptime()
+        self.assertIn("System uptime (fallback)", output.getvalue())
+
+    @patch("commands.shutil.which", return_value=None)
+    def test_unavailable_uptime_fails_gracefully_without_proc(self, _which):
+        output = io.StringIO()
+        with patch.object(Path, "is_file", return_value=False), redirect_stdout(output):
+            commands.show_system_uptime()
+        self.assertIn("⚠️ System uptime is unavailable", output.getvalue())
+
+    @patch("commands.shutil.which", return_value=None)
+    def test_unavailable_df_uses_disk_usage_fallback(self, _which):
+        from collections import namedtuple
+        Usage = namedtuple("Usage", ["total", "used", "free"])
+        output = io.StringIO()
+        with patch("commands.shutil.disk_usage", return_value=Usage(100 * 1024**3, 40 * 1024**3, 60 * 1024**3)), redirect_stdout(output):
+            commands.show_disk_usage()
+        self.assertIn("Root filesystem (fallback)", output.getvalue())
+
+    @patch("commands.shutil.which", return_value=None)
+    def test_unavailable_free_uses_proc_meminfo_fallback(self, _which):
+        output = io.StringIO()
+        with patch.object(Path, "is_file", return_value=True), patch.object(
+            Path, "read_text", return_value="MemTotal: 16000000 kB\nMemAvailable: 8000000 kB\n"
+        ), redirect_stdout(output):
+            commands.show_memory_usage()
+        self.assertIn("Memory (fallback from /proc/meminfo)", output.getvalue())
+
+    @patch("commands.shutil.which", return_value=None)
+    def test_unavailable_kernel_info_uses_platform_fallback(self, _which):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            commands.show_kernel_info()
+        self.assertIn("Kernel info (fallback)", output.getvalue())
+
+    @patch("commands.shutil.which", return_value=None)
+    def test_unavailable_whoami_uses_fallback(self, _which):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            commands.show_current_user()
+        self.assertTrue(len(output.getvalue().strip()) > 0)
 
 
 if __name__ == "__main__":
