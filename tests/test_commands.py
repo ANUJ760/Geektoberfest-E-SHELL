@@ -217,6 +217,23 @@ class CommandRoutingTests(unittest.TestCase):
             [["uname", "-a"], ["lscpu"], ["free", "-h"], ["df", "-h"]],
         )
 
+    @patch("commands.run_command")
+    @patch("commands.launch_background")
+    @patch("commands.predict_intent", return_value="unknown")
+    def test_unknown_input_suggests_help_and_runs_nothing(
+        self, _predict_intent, launch_background, run_command
+    ):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            commands.handle_command("blorp the frobnicator")
+        output = output.getvalue()
+
+        self.assertIn("did not run anything", output)
+        self.assertIn("help", output)
+        self.assertIn("rephras", output)
+        run_command.assert_not_called()
+        launch_background.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -394,6 +394,13 @@ def show_fastfetch_info():
         print()
 
 
+def print_unknown_feedback(text):
+    """Explain that nothing was run and point the user to help or a rephrase."""
+    print(f"❓ I didn't understand \"{text}\", so I did not run anything.")
+    print("   - Type 'help' to see example commands.")
+    print("   - Or try rephrasing, for example: 'disk usage', 'cpu info', or 'who am i'.")
+
+
 def handle_command(text):
     words = parse_words(text)
     if not words:
@@ -477,4 +484,4 @@ def handle_command(text):
     if handler:
         handler()
     else:
-        print("❓ Command not recognized")
+        print_unknown_feedback(text)
