@@ -1,0 +1,19 @@
+# .gitignore
+
+# virtual environments ( general names of venvs )
+venv/
+myvenv/
+muenv/ 
+.venv/
+env/
+
+
+# python cache dirs
+__pycache__/
+*.py[cod]
+
+
+# editors ( if there is someone using VS )
+.vscode/
+
+
