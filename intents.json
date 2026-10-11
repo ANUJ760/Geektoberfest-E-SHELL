@@ -307,5 +307,17 @@
     "execute file",
     "run workspace file",
     "execute code file"
+  ],
+  "version": [
+    "version",
+    "show version",
+    "project version",
+    "eshell version",
+    "e-shell version",
+    "what version is this",
+    "display version",
+    "program version",
+    "about version",
+    "version info"
   ]
 }

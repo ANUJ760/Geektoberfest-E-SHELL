@@ -234,6 +234,25 @@ class CommandRoutingTests(unittest.TestCase):
         run_command.assert_not_called()
         launch_background.assert_not_called()
 
+    def test_version_command_displays_version_and_runtime_info(self):
+        for cmd in ("version", "--version", "-v"):
+            with self.subTest(cmd=cmd):
+                output = io.StringIO()
+                with redirect_stdout(output):
+                    commands.handle_command(cmd)
+                val = output.getvalue()
+                self.assertIn("E-SHELL version 0.1.0", val)
+                self.assertIn("Runtime: Python", val)
+
+    @patch("commands.predict_intent", return_value="version")
+    def test_version_intent_routing_displays_version_info(self, _predict):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            commands.handle_command("show version")
+        val = output.getvalue()
+        self.assertIn("E-SHELL version 0.1.0", val)
+        self.assertIn("Runtime: Python", val)
+
 
 if __name__ == "__main__":
     unittest.main()

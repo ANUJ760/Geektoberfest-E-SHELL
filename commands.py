@@ -1,8 +1,10 @@
 import datetime
 import os
+import platform
 import shlex
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 from model import predict_intent
@@ -25,6 +27,7 @@ BLOCKED_COMMANDS = {
     "dd",
     "mkfs",
 }
+VERSION = "0.1.0"
 PROJECT_DIR = Path.cwd().resolve()
 WORKSPACE_DIR = PROJECT_DIR / "workspace"
 ALLOWED_EDITORS = {"nano", "vim"}
@@ -144,6 +147,15 @@ def run_shell_file(path):
     run_and_print(["bash", str(path)])
 
 
+def show_version_info():
+    """Display project version and basic runtime info without changing system state."""
+    py_ver = sys.version.split()[0]
+    os_name = platform.system()
+    arch = platform.machine()
+    print(f"E-SHELL version {VERSION}")
+    print(f"Runtime: Python {py_ver} on {os_name} ({arch})")
+
+
 def print_help():
     print(
         """
@@ -152,7 +164,7 @@ Available examples:
   gpu info                battery info            network info
   ip address              logged in users         running processes
   environment info        shell info              python version
-  package manager info    fastfetch info
+  package manager info    fastfetch info          version
   touch notes.txt         mkdir examples          cp notes.txt backup.txt
   create file notes.txt   create folder examples  copy notes.txt to backup.txt
   edit hello.py           open hello.py in nano   open hello.py in vim
@@ -411,6 +423,9 @@ def handle_command(text):
     if first_word in BLOCKED_COMMANDS or lowered_words[:2] == ["chmod", "777"]:
         print("Blocked dangerous command.")
         return
+    if first_word in ("version", "--version", "-v"):
+        show_version_info()
+        return
     if first_word == "help":
         print_help()
         return
@@ -476,6 +491,7 @@ def handle_command(text):
         "environment_info": show_environment_info,
         "shell_info": lambda: print(os.environ.get("SHELL", "Unknown shell")),
         "python_version": lambda: run_command(["python3", "--version"]),
+        "version": show_version_info,
         "package_manager_info": show_package_manager_info,
         "fastfetch_info": show_fastfetch_info,
     }

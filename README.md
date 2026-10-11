@@ -78,6 +78,7 @@ E-SHELL supports informational commands plus intentionally limited file actions.
 | `environment_info` | Prints selected environment variables such as `USER`, `HOME`, and `PATH`. |
 | `shell_info` | Shows the current shell from the `SHELL` environment variable. |
 | `python_version` | Shows the installed Python version with `python3 --version`. |
+| `version` | Shows E-SHELL project version and basic runtime information without changing system state. |
 | `package_manager_info` | Detects common package managers such as `apt`, `dnf`, and `pacman`. |
 | `fastfetch_info` | Runs `fastfetch` if installed; otherwise falls back to `uname`, `lscpu`, `free`, and `df`. |
 | `touch filename` or `create file filename` | Creates one file in the current project directory. |
@@ -209,6 +210,7 @@ running processes
 environment info
 shell info
 python version
+version
 package manager info
 fastfetch info
 touch notes.txt
