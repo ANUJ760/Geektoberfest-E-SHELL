@@ -258,6 +258,19 @@ E-SHELL exits normally when the user types `exit`:
 
 ![E-SHELL exit](docs/screenshots/assistant-exit.png)
 
+## Linux compatibility and command fallbacks
+
+E-SHELL is designed for Linux environments. For environments where certain tools might not be pre-installed (such as minimal containers, non-GNOME desktops, or headless servers), E-SHELL provides automatic fallbacks and graceful degradation:
+
+- **OS Information (`os_info`)**: Queries `lsb_release -a` when present; automatically falls back to `/etc/os-release` if `lsb_release` is missing.
+- **System Summary (`fastfetch_info`)**: Runs `fastfetch` if installed; otherwise automatically displays fallback system details using `uname -a`, `lscpu`, `free -h`, and `df -h`.
+- **GPU Information (`gpu_info`)**: Detects missing `lspci` and explains that the utility is missing instead of failing with an exception.
+- **Battery Status (`battery_info`)**: Directly reads `/sys/class/power_supply` entries without external processes, handling systems without batteries gracefully.
+- **Package Manager (`package_manager_info`)**: Dynamically detects common package managers (`apt`, `dnf`, `pacman`, `zypper`, `apk`).
+- **GUI and optional tools (`open_firefox`, `calculator`)**: Reports a clear notice if GUI binaries (`firefox`, `gnome-calculator`) are not installed on the system.
+
+For a comprehensive matrix of commands, potential missing scenarios, and fallbacks, see [Linux Compatibility Guide](docs/LINUX_COMPATIBILITY.md).
+
 ## Current limitations
 
 - The model is trained on a small number of example phrases, so its vocabulary is still limited.
