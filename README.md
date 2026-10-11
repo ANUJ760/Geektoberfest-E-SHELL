@@ -83,9 +83,8 @@ E-SHELL supports informational commands plus intentionally limited file actions.
 | `touch filename` or `create file filename` | Creates one file in the current project directory. |
 | `mkdir foldername` or `create folder foldername` | Creates one folder in the current project directory. |
 | `cp source destination` or `copy source to destination` | Copies one existing file to another simple filename in the current project directory. |
-| `edit filename` | Opens `workspace/filename` in nano. |
-| `open filename in nano` | Opens `workspace/filename` in nano. |
-| `open filename in vim` | Opens `workspace/filename` in vim. |
+| `edit filename` or `open filename` | Opens `workspace/filename` in the configured default editor (nano by default). Set `E_SHELL_DEFAULT_EDITOR` to `nano`, `vim`, `micro`, `helix`, `emacs`, `gedit`, or `atom` to choose another. |
+| `open filename in <editor>` | Opens the file in nano, vim, micro, helix, emacs, gedit, or atom. GUI editors launch in the background. |
 | `make filename executable` | Runs `chmod +x` for a validated file inside `workspace/`. |
 | `run filename` | Runs supported code files inside `workspace/` after asking for confirmation the first time. |
 | `open_firefox` | Opens Firefox. |
@@ -119,7 +118,7 @@ For file actions, E-SHELL:
 - asks for missing arguments instead of guessing
 - uses Python APIs or `subprocess.run([...])` argument lists rather than passing raw user input to `shell=True`
 - opens and runs files only inside `workspace/`
-- allows only `nano` and `vim` as editors
+- allows only the supported editor allowlist: `nano`, `vim`, `micro`, `helix`, `emacs`, `gedit`, and `atom`
 - asks before running a file for the first time because code execution can be unsafe
 - runs code with a 10 second timeout and captures stdout and stderr
 
@@ -180,6 +179,17 @@ You can also use the helper script:
 ```bash
 ./run.sh
 ```
+
+To choose the editor used by `edit filename` or `open filename`, set
+`E_SHELL_DEFAULT_EDITOR` to a supported editor. For example:
+
+```bash
+E_SHELL_DEFAULT_EDITOR=micro ./run.sh
+```
+
+The default is `nano`. Editors must already be installed and available on
+`PATH`; E-SHELL will suggest installing the requested editor or choosing
+another supported one if it cannot find it.
 
 ## How to run the tests
 
