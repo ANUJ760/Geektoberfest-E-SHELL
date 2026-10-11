@@ -9,7 +9,11 @@
     "what files are here",
     "show current files",
     "file list",
-    "directory listing"
+    "directory listing",
+    "see files",
+    "view files",
+    "show all files",
+    "check directory contents"
   ],
   "current_dir": [
     "current directory",
@@ -21,7 +25,11 @@
     "pwd",
     "where is this terminal",
     "show working directory",
-    "current path"
+    "current path",
+    "show current path",
+    "what directory am i in",
+    "show current directory path",
+    "where am i located"
   ],
   "disk_usage": [
     "disk usage",
@@ -33,7 +41,11 @@
     "storage usage",
     "filesystem usage",
     "free disk space",
-    "disk details"
+    "disk details",
+    "how much storage is available",
+    "check storage capacity",
+    "show hard drive usage",
+    "free drive space"
   ],
   "memory_usage": [
     "memory usage",
@@ -45,7 +57,11 @@
     "ram info",
     "memory details",
     "available memory",
-    "system memory"
+    "system memory",
+    "check ram",
+    "how much ram is used",
+    "memory status",
+    "check ram capacity"
   ],
   "date_time": [
     "date",
@@ -57,16 +73,34 @@
     "show time",
     "what time is it",
     "today date",
-    "current datetime"
+    "current datetime",
+    "what is the date",
+    "show today date",
+    "what time is it right now",
+    "current timestamp"
   ],
   "open_firefox": [
     "open firefox",
     "start browser",
-    "launch firfox"
+    "launch firfox",
+    "open mozilla firefox",
+    "open browser",
+    "web browser",
+    "launch browser",
+    "start internet browser",
+    "run firefox",
+    "launch the web browser"
   ],
   "calculator": [
     "open calculator",
-    "start calculator"
+    "start calculator",
+    "open system calculator",
+    "run calculator",
+    "calc",
+    "show calculator",
+    "open gnome calculator",
+    "start calc",
+    "open calc"
   ],
   "system_uptime": [
     "system uptime",
@@ -78,7 +112,11 @@
     "system running time",
     "how long is this computer on",
     "boot time info",
-    "running time"
+    "running time",
+    "uptime status",
+    "how long has this pc been running",
+    "system running duration",
+    "server uptime"
   ],
   "kernel_info": [
     "kernel info",
@@ -90,13 +128,27 @@
     "show kernel info",
     "uname info",
     "system kernel info",
-    "kernel release"
+    "kernel release",
+    "check kernel",
+    "kernel build",
+    "linux kernel details",
+    "uname details"
   ],
   "version": [
     "version",
     "tell version",
     "VERSION",
-    "shell version"
+    "shell version",
+    "show version",
+    "what is the version",
+    "eshell version",
+    "e-shell version",
+    "app version",
+    "show app version",
+    "display version",
+    "version info",
+    "current version",
+    "check version"
   ],
   "cpu_info": [
     "cpu info",
@@ -108,7 +160,11 @@
     "cpu model",
     "processor model",
     "cpu hardware",
-    "show cpu information"
+    "show cpu information",
+    "check cpu",
+    "processor specifications",
+    "cpu specs",
+    "show processor details"
   ],
   "current_user": [
     "current user",
@@ -120,7 +176,11 @@
     "username",
     "active user",
     "current username",
-    "whoami"
+    "whoami",
+    "what username am i using",
+    "show my user",
+    "who is current user",
+    "my user account"
   ],
   "hostname": [
     "hostname",
@@ -132,7 +192,11 @@
     "system hostname",
     "show machine name",
     "what is this computer called",
-    "host info"
+    "host info",
+    "what is the host name",
+    "system host name",
+    "check hostname",
+    "computer hostname"
   ],
   "os_info": [
     "os info",
@@ -144,7 +208,11 @@
     "what operating system is this",
     "os details",
     "system release info",
-    "show release details"
+    "show release details",
+    "linux distribution",
+    "distro details",
+    "what linux distro",
+    "operating system details"
   ],
   "gpu_info": [
     "gpu info",
@@ -156,7 +224,11 @@
     "which gpu do i have",
     "show graphics hardware",
     "gpu details",
-    "graphics hardware"
+    "graphics hardware",
+    "graphics information",
+    "check gpu",
+    "video card details",
+    "show display adapter"
   ],
   "battery_info": [
     "battery info",
@@ -168,7 +240,11 @@
     "how much battery is left",
     "show battery charge",
     "battery details",
-    "charging status"
+    "charging status",
+    "check battery",
+    "battery health",
+    "power level",
+    "remaining battery"
   ],
   "network_info": [
     "network info",
@@ -180,7 +256,11 @@
     "network configuration",
     "show network config",
     "ethernet info",
-    "wifi interface info"
+    "wifi interface info",
+    "network status",
+    "network interface details",
+    "show network adapters",
+    "check network"
   ],
   "ip_address": [
     "ip address",
@@ -192,7 +272,11 @@
     "ip info",
     "internet protocol address",
     "local ip address",
-    "list ip addresses"
+    "list ip addresses",
+    "show my ip address",
+    "what is the ip",
+    "check ip address",
+    "show network ip"
   ],
   "logged_in_users": [
     "logged in users",
@@ -204,7 +288,11 @@
     "who command",
     "users online",
     "display logged users",
-    "login sessions"
+    "login sessions",
+    "show active users",
+    "who is logged on",
+    "active user accounts",
+    "check logged in users"
   ],
   "running_processes": [
     "running processes",
@@ -216,7 +304,11 @@
     "show running programs",
     "memory heavy processes",
     "list processes",
-    "current processes"
+    "current processes",
+    "active tasks",
+    "top processes",
+    "check running programs",
+    "process monitor"
   ],
   "environment_info": [
     "environment info",
@@ -228,7 +320,11 @@
     "display environment",
     "environment details",
     "user environment",
-    "system environment"
+    "system environment",
+    "print environment",
+    "show env",
+    "view environment variables",
+    "list env variables"
   ],
   "shell_info": [
     "shell info",
@@ -240,7 +336,11 @@
     "default shell",
     "display shell",
     "terminal shell",
-    "my shell"
+    "my shell",
+    "what shell is running",
+    "check shell",
+    "current login shell",
+    "show active shell"
   ],
   "python_version": [
     "python version",
@@ -252,7 +352,11 @@
     "installed python version",
     "what python is installed",
     "python info",
-    "python details"
+    "python details",
+    "check installed python",
+    "python interpreter version",
+    "what version of python",
+    "python release"
   ],
   "package_manager_info": [
     "package manager info",
@@ -264,7 +368,10 @@
     "software manager info",
     "detect package manager",
     "installed package manager",
-    "package system"
+    "package system",
+    "check package manager",
+    "what package manager is installed",
+    "system package manager"
   ],
   "fastfetch_info": [
     "fastfetch info",
@@ -276,7 +383,11 @@
     "computer summary",
     "hardware summary",
     "quick system info",
-    "neofetch style info"
+    "neofetch style info",
+    "system overview",
+    "full system summary",
+    "quick hardware summary",
+    "neofetch info"
   ],
   "edit_file": [
     "edit filename",
@@ -308,7 +419,11 @@
     "edit my notes",
     "open notepad",
     "edit workspace file",
-    "open workspace file"
+    "open workspace file",
+    "open file in nano",
+    "open file in vim",
+    "modify file in nano",
+    "modify file in vim"
   ],
   "make_executable": [
     "make filename executable",
@@ -320,7 +435,11 @@
     "make shell script executable",
     "allow script to execute",
     "set executable permission",
-    "make workspace file executable"
+    "make workspace file executable",
+    "make script executable",
+    "grant execution rights",
+    "mark file executable",
+    "enable execute permission"
   ],
   "run_file": [
     "run filename",
@@ -332,6 +451,10 @@
     "run script.sh",
     "execute file",
     "run workspace file",
-    "execute code file"
+    "execute code file",
+    "execute script",
+    "run python script",
+    "execute program",
+    "start program"
   ]
 }

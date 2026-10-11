@@ -42,6 +42,38 @@ class IntentPredictionTests(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertEqual(predict_intent(phrase), intent)
 
+    def test_expanded_natural_language_phrases_are_recognized(self):
+        expected = {
+            "open mozilla firefox": "open_firefox",
+            "open browser": "open_firefox",
+            "web browser": "open_firefox",
+            "open system calculator": "calculator",
+            "open calc": "calculator",
+            "how much storage is available": "disk_usage",
+            "check storage capacity": "disk_usage",
+            "check ram": "memory_usage",
+            "how much ram is used": "memory_usage",
+            "what is the date": "date_time",
+            "what time is it right now": "date_time",
+            "how long has this pc been running": "system_uptime",
+            "processor specifications": "cpu_info",
+            "what username am i using": "current_user",
+            "system host name": "hostname",
+            "linux distribution": "os_info",
+            "check battery": "battery_info",
+            "show network adapters": "network_info",
+            "show my ip address": "ip_address",
+            "who is logged on": "logged_in_users",
+            "view environment variables": "environment_info",
+            "what shell is running": "shell_info",
+            "what version of python": "python_version",
+            "system overview": "fastfetch_info",
+        }
+
+        for phrase, intent in expected.items():
+            with self.subTest(phrase=phrase):
+                self.assertEqual(predict_intent(phrase), intent)
+
 
 if __name__ == "__main__":
     unittest.main()

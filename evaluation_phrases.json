@@ -188,6 +188,13 @@
     "execute the program",
     "run test.js"
   ],
+  "version": [
+    "version details",
+    "which version of eshell",
+    "release version",
+    "show program version",
+    "about version"
+  ],
   "unknown": [
     "make the computer do something",
     "what is the meaning of life",
