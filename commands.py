@@ -5,8 +5,10 @@ import platform
 import shlex
 import shutil
 import socket
+import stat
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 from model import predict_intent
@@ -45,6 +47,9 @@ EDITORS = {
     "gedit": {"command": ["gedit"], "gui": True},
 }
 RUN_TIMEOUT_SECONDS = 10
+# ZIP extraction limits keep a single archive from filling the disk.
+MAX_ZIP_ENTRIES = 200
+MAX_ZIP_UNPACKED_BYTES = 20 * 1024 * 1024
 APPROVED_RUN_FILES = set()
 
 
@@ -160,6 +165,15 @@ def run_shell_file(path):
     run_and_print(["bash", str(path)])
 
 
+def run_go_file(path):
+    run_and_print(["go", "run", str(path)])
+
+
+def run_rust_file(path):
+    output_path = path.with_suffix("")
+    compile_then_run(["rustc", str(path), "-o", str(output_path)], [str(output_path)])
+
+
 def print_help():
     print(
         """
@@ -173,12 +187,13 @@ Available examples:
   create file notes.txt   create folder examples  copy notes.txt to backup.txt
   edit hello.py           open hello.py in nano   open hello.py in vim
   make hello.py executable
-  run hello.py
+  run hello.py            unzip project.zip
 
 File safety rules:
   - Only simple names in the current project directory are allowed.
   - Paths and shell symbols such as /, .., ~, *, ?, &, |, ;, $, `, >, < are blocked.
   - Editing, chmod +x, and running are limited to files inside workspace/.
+  - unzip only extracts a .zip from workspace/ into workspace/ and refuses unsafe archives.
   - Destructive commands are intentionally not supported.
 """.strip()
     )
@@ -371,13 +386,159 @@ def handle_run_file(words):
         ".java": run_java_file,
         ".js": run_js_file,
         ".sh": run_shell_file,
+        ".go": run_go_file,
+        ".rs": run_rust_file,
     }
     runner = runners.get(path.suffix)
     if not runner:
-        print("Unsupported file type. Supported: .py, .c, .cpp, .java, .js, .sh")
+        print("Unsupported file type. Supported: .py, .c, .cpp, .java, .js, .sh, .go, .rs")
         return
 
     runner(path)
+
+
+class ZipExtractionError(Exception):
+    """Raised when writing archive entries fails; anything written is undone first."""
+
+
+def check_zip_member(info):
+    """Return (relative parts, None) for a safe archive entry, or (None, reason)."""
+    name = info.filename
+    if "\0" in name:
+        return None, "the name contains a null character"
+    if "\\" in name:
+        return None, "the name contains a backslash"
+    if name.startswith("/") or (len(name) > 1 and name[1] == ":"):
+        return None, "the path is absolute"
+
+    parts = [part for part in name.split("/") if part not in ("", ".")]
+    if not parts:
+        return None, "the name is empty"
+    if ".." in parts:
+        return None, "the path uses .. to leave the folder"
+    for part in parts:
+        if any(blocked in part for blocked in BLOCKED_NAME_PARTS if blocked != "/"):
+            return None, "the name contains a blocked character"
+
+    if info.flag_bits & 0x1:
+        return None, "the entry is encrypted"
+
+    file_type = stat.S_IFMT(info.external_attr >> 16)
+    if file_type not in (0, stat.S_IFREG, stat.S_IFDIR):
+        return None, "links and special files are not allowed"
+
+    return parts, None
+
+
+def plan_zip_extraction(archive):
+    """Check every entry first. Returns (entries, None) or (None, message)."""
+    infos = archive.infolist()
+    if not infos:
+        return None, "the archive is empty"
+    if len(infos) > MAX_ZIP_ENTRIES:
+        return None, f"it has {len(infos)} entries (limit {MAX_ZIP_ENTRIES})"
+
+    total_bytes = sum(info.file_size for info in infos)
+    if total_bytes > MAX_ZIP_UNPACKED_BYTES:
+        return None, (
+            f"it would unpack to {total_bytes // (1024 * 1024)} MB "
+            f"(limit {MAX_ZIP_UNPACKED_BYTES // (1024 * 1024)} MB)"
+        )
+
+    workspace = WORKSPACE_DIR.resolve()
+    entries = []
+    seen = set()
+    for info in infos:
+        parts, reason = check_zip_member(info)
+        if reason:
+            return None, f"unsafe entry '{info.filename}': {reason}"
+
+        target = (workspace.joinpath(*parts)).resolve()
+        if not target.is_relative_to(workspace) or target == workspace:
+            return None, f"unsafe entry '{info.filename}': it resolves outside workspace/"
+        if target in seen:
+            return None, f"entry '{info.filename}' appears more than once"
+        seen.add(target)
+
+        is_dir = info.is_dir()
+        if target.exists() and not (is_dir and target.is_dir()):
+            return None, f"'{info.filename}' already exists in workspace/ and would be overwritten"
+        entries.append((info, target, is_dir))
+
+    return entries, None
+
+
+def write_zip_entries(archive, entries):
+    """Extract planned entries. Undo everything if any entry fails. Returns file count."""
+    created = []
+    written = 0
+    try:
+        for info, target, is_dir in entries:
+            if is_dir:
+                if not target.exists():
+                    target.mkdir(parents=True)
+                    created.append(target)
+                continue
+
+            for parent in reversed(target.parents):
+                if parent == WORKSPACE_DIR.resolve() or parent.exists():
+                    continue
+                parent.mkdir()
+                created.append(parent)
+
+            # "xb" refuses to overwrite and never follows an existing link.
+            with archive.open(info) as source, open(target, "xb") as destination:
+                created.append(target)
+                remaining = MAX_ZIP_UNPACKED_BYTES - written
+                data = source.read(remaining + 1)
+                if len(data) > remaining:
+                    raise ValueError("the archive unpacks to more data than it declared")
+                destination.write(data)
+                written += len(data)
+    except (OSError, ValueError, zipfile.BadZipFile, RuntimeError) as error:
+        for path in reversed(created):
+            try:
+                path.rmdir() if path.is_dir() else path.unlink()
+            except OSError:
+                pass
+        raise ZipExtractionError(str(error)) from error
+
+    return sum(1 for _, _, is_dir in entries if not is_dir)
+
+
+def handle_unzip(words):
+    if len(words) != 2:
+        print("Please provide one archive name, for example: unzip project.zip")
+        return
+
+    path = get_safe_path(words[1])
+    if not path:
+        return
+    if path.suffix.lower() != ".zip":
+        print("Only .zip archives are supported.")
+        return
+    if not path.is_file():
+        print(f"File does not exist in workspace: {path.name}")
+        return
+
+    try:
+        with zipfile.ZipFile(path) as archive:
+            entries, problem = plan_zip_extraction(archive)
+            if problem:
+                print(f"Blocked unsafe archive {path.name}: {problem}. Nothing was extracted.")
+                return
+            count = write_zip_entries(archive, entries)
+    except ZipExtractionError as error:
+        print(f"Could not extract {path.name}: {error}. Nothing was extracted.")
+        return
+    except zipfile.BadZipFile:
+        print(f"Could not extract {path.name}: it is not a valid zip file. Nothing was extracted.")
+        return
+    except OSError as error:
+        print(f"Could not read {path.name}: {error.strerror or error}.")
+        return
+
+    print(f"Extracted {count} file(s) from {path.name} into workspace/")
 
 
 def handle_touch(words):
@@ -718,6 +879,9 @@ def handle_command(text):
         return
     if first_word == "run":
         handle_run_file(words)
+        return
+    if first_word in ("unzip", "extract"):
+        handle_unzip(words)
         return
 
     # Friendly aliases keep file operations easier to discover while still
