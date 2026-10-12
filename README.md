@@ -56,7 +56,7 @@ commands.py runs the matching safe command
 
 ## Supported safe commands
 
-E-SHELL supports informational commands plus intentionally limited file actions.
+E-SHELL supports informational commands plus intentionally limited file actions. For an in-depth reference of all supported intents, example phrases, actions, and required Linux tools, see the [Commands Reference](docs/COMMANDS_REFERENCE.md).
 
 | Intent / input | What it does |
 |---|---|
