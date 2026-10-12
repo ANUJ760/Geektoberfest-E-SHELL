@@ -275,14 +275,34 @@
   "edit_file": [
     "edit filename",
     "edit notes.py",
+
     "open filename in nano",
     "open notes.py in nano",
     "open filename in vim",
     "open notes.py in vim",
-    "edit code file",
     "open code file in nano",
     "open code file in vim",
-    "edit workspace file"
+    "open code file in micro",
+    "open code file in helix",
+    "open code file in emacs",
+    "open code file in gedit",
+    "open filename in micro",
+    "open notes.py in micro",
+    "open filename in helix",
+    "open notes.py in helix",
+    "open filename in emacs",
+    "open notes.py in emacs",
+    "open filename in gedit",
+    "open notes.py in gedit",
+
+    "open filename in the default editor",
+    "open notes.py",
+    "edit code file",
+    "open filename",
+    "edit my notes",
+    "open notepad",
+    "edit workspace file",
+    "open workspace file"
   ],
   "make_executable": [
     "make filename executable",

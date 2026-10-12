@@ -47,6 +47,7 @@ commands.py runs the matching safe command
 | `intents.json` | Stores example phrases for each supported intent. |
 | `workspace/` | Safe folder for files that can be edited, made executable, or run. |
 | `train.py` | Trains the classifier from the phrases in `intents.json`. |
+| `intent_data.py` | Checks `intents.json` for problems before training. |
 | `model.py` | Loads the saved model and predicts the intent for new user input. |
 | `vectorizer.pkl` | Saved TF-IDF vectorizer created during training. |
 | `intent_model.pkl` | Saved trained intent classifier. |
@@ -83,9 +84,8 @@ E-SHELL supports informational commands plus intentionally limited file actions.
 | `touch filename` or `create file filename` | Creates one file in the current project directory. |
 | `mkdir foldername` or `create folder foldername` | Creates one folder in the current project directory. |
 | `cp source destination` or `copy source to destination` | Copies one existing file to another simple filename in the current project directory. |
-| `edit filename` | Opens `workspace/filename` in nano. |
-| `open filename in nano` | Opens `workspace/filename` in nano. |
-| `open filename in vim` | Opens `workspace/filename` in vim. |
+| `edit filename` or `open filename` | Opens `workspace/filename` in the configured default editor (nano by default). Set `E_SHELL_DEFAULT_EDITOR` to `nano`, `vim`, `micro`, `helix`, `emacs`, `gedit`, or `atom` to choose another. |
+| `open filename in <editor>` | Opens the file in nano, vim, micro, helix, emacs, gedit, or atom. GUI editors launch in the background. |
 | `make filename executable` | Runs `chmod +x` for a validated file inside `workspace/`. |
 | `run filename` | Runs supported code files inside `workspace/` after asking for confirmation the first time. |
 | `open_firefox` | Opens Firefox. |
@@ -119,7 +119,7 @@ For file actions, E-SHELL:
 - asks for missing arguments instead of guessing
 - uses Python APIs or `subprocess.run([...])` argument lists rather than passing raw user input to `shell=True`
 - opens and runs files only inside `workspace/`
-- allows only `nano` and `vim` as editors
+- allows only the supported editor allowlist: `nano`, `vim`, `micro`, `helix`, `emacs`, `gedit`, and `atom`
 - asks before running a file for the first time because code execution can be unsafe
 - runs code with a 10 second timeout and captures stdout and stderr
 
@@ -150,7 +150,7 @@ make script.sh executable
 run hello.py
 ```
 
-E-SHELL also includes a confidence threshold in `model.py`. If the model is not confident enough about a phrase, it returns `unknown` instead of forcing an unrelated command. In that case E-SHELL runs nothing and replies with a short message suggesting `help` or a rephrased request.
+E-SHELL also includes a confidence threshold in `model.py`. If the model is not confident enough about a phrase, it returns `unknown` instead of forcing an unrelated command. In that case E-SHELL runs nothing and replies with a short message suggesting `help` or a rephrased request. Phrases that merely start with a command word (for example `make the computer do something`) get the same response. The `[DEBUG] Predicted intent` line is hidden by default; set `ESHELL_DEBUG=1` to show it.
 
 ## How to run E-SHELL
 
@@ -167,6 +167,8 @@ cd E-SHELL
 venv/bin/python train.py
 ```
 
+Before training, `intents.json` is checked. Malformed JSON, empty phrase lists, blank or non-text phrases, fewer than two intents, and the same phrase listed under different intents (ignoring case) stop training with a message that names the problem. Nothing is saved when the data is invalid.
+
 Use `venv/bin/python`, not plain `python3`, because the E-SHELL dependencies such as `scikit-learn` are installed inside the virtual environment.
 
 4. Start E-SHELL:
@@ -181,6 +183,17 @@ You can also use the helper script:
 ./run.sh
 ```
 
+To choose the editor used by `edit filename` or `open filename`, set
+`E_SHELL_DEFAULT_EDITOR` to a supported editor. For example:
+
+```bash
+E_SHELL_DEFAULT_EDITOR=micro ./run.sh
+```
+
+The default is `nano`. Editors must already be installed and available on
+`PATH`; E-SHELL will suggest installing the requested editor or choosing
+another supported one if it cannot find it.
+
 ## How to run the tests
 
 E-SHELL includes a small standard-library test suite for safe file handling, fallback command routing, and the new intents:
@@ -189,7 +202,7 @@ E-SHELL includes a small standard-library test suite for safe file handling, fal
 venv/bin/python -m unittest discover -s tests -v
 ```
 
-`tests/test_safety_edge_cases.py` covers failure paths: programs that time out, missing tools, cancelled runs, and paths that resolve outside the allowed folder. Each case checks both the message shown to the user and whether a subprocess was started.
+`tests/test_routing_and_safety.py` covers intent routing (each predicted intent reaches the right handler, and unknown or file-action intents run nothing), blocked commands, filename and path validation, and the confirm-before-run rules.
 
 To exit E-SHELL:
 

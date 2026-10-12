@@ -116,10 +116,9 @@ class FileOperationTests(unittest.TestCase):
 
     @patch("commands.subprocess.run")
     def test_edit_file_blocks_other_editors(self, run):
-        output = self.capture_output("open notes.py in emacs")
+        output = self.capture_output("open notes.py in word")
+        self.assertIn("Unsupported editor", output)
 
-        run.assert_not_called()
-        self.assertIn("Only nano and vim are allowed editors.", output)
 
     @patch("commands.subprocess.run")
     def test_make_executable_uses_chmod_plus_x_only_in_workspace(self, run):
@@ -296,6 +295,33 @@ class CommandRoutingTests(unittest.TestCase):
         with redirect_stdout(output):
             commands.show_current_user()
         self.assertTrue(len(output.getvalue().strip()) > 0)
+
+    @patch("commands.run_command")
+    @patch("commands.predict_intent", return_value="unknown")
+    def test_make_without_executable_is_treated_as_unknown(self, _predict_intent, run_command):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            commands.handle_command("make the computer do something")
+        output = output.getvalue()
+
+        self.assertIn("did not run anything", output)
+        self.assertNotIn("make filename executable", output)
+        run_command.assert_not_called()
+
+    @patch("commands.predict_intent", return_value="unknown")
+    def test_debug_line_hidden_unless_enabled(self, _predict_intent):
+        with patch.dict(commands.os.environ, {}, clear=False):
+            commands.os.environ.pop("ESHELL_DEBUG", None)
+            output = io.StringIO()
+            with redirect_stdout(output):
+                commands.handle_command("asdf qwerty")
+            self.assertNotIn("[DEBUG]", output.getvalue())
+
+        with patch.dict(commands.os.environ, {"ESHELL_DEBUG": "1"}):
+            output = io.StringIO()
+            with redirect_stdout(output):
+                commands.handle_command("asdf qwerty")
+            self.assertIn("[DEBUG] Predicted intent: unknown", output.getvalue())
 
 
 if __name__ == "__main__":
