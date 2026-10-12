@@ -150,7 +150,7 @@ make script.sh executable
 run hello.py
 ```
 
-E-SHELL also includes a confidence threshold in `model.py`. If the model is not confident enough about a phrase, it returns `unknown` instead of forcing an unrelated command. In that case E-SHELL runs nothing and replies with a short message suggesting `help` or a rephrased request.
+E-SHELL also includes a confidence threshold in `model.py`. If the model is not confident enough about a phrase, it returns `unknown` instead of forcing an unrelated command. In that case E-SHELL runs nothing and replies with a short message suggesting `help` or a rephrased request. Phrases that merely start with a command word (for example `make the computer do something`) get the same response. The `[DEBUG] Predicted intent` line is hidden by default; set `ESHELL_DEBUG=1` to show it.
 
 ## How to run E-SHELL
 

@@ -623,7 +623,7 @@ def handle_command(text):
     ):
         handle_edit(words)
         return
-    if first_word == "make":
+    if first_word == "make" and lowered_words[-1] == "executable":
         handle_make_executable(words)
         return
     if first_word == "run":
@@ -646,7 +646,8 @@ def handle_command(text):
         return
 
     intent = predict_intent(text)
-    print(f"[DEBUG] Predicted intent: {intent}")
+    if os.environ.get("ESHELL_DEBUG"):
+        print(f"[DEBUG] Predicted intent: {intent}")
 
     handlers = {
         "list_files": lambda: run_command(["ls"]),
