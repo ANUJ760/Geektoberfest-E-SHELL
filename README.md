@@ -189,6 +189,8 @@ E-SHELL includes a small standard-library test suite for safe file handling, fal
 venv/bin/python -m unittest discover -s tests -v
 ```
 
+`tests/test_routing_and_safety.py` covers intent routing (each predicted intent reaches the right handler, and unknown or file-action intents run nothing), blocked commands, filename and path validation, and the confirm-before-run rules.
+
 To exit E-SHELL:
 
 ```text
