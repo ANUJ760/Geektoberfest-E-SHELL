@@ -47,6 +47,7 @@ commands.py runs the matching safe command
 | `intents.json` | Stores example phrases for each supported intent. |
 | `workspace/` | Safe folder for files that can be edited, made executable, or run. |
 | `train.py` | Trains the classifier from the phrases in `intents.json`. |
+| `intent_data.py` | Checks `intents.json` for problems before training. |
 | `model.py` | Loads the saved model and predicts the intent for new user input. |
 | `vectorizer.pkl` | Saved TF-IDF vectorizer created during training. |
 | `intent_model.pkl` | Saved trained intent classifier. |
@@ -165,6 +166,8 @@ cd E-SHELL
 ```bash
 venv/bin/python train.py
 ```
+
+Before training, `intents.json` is checked. Malformed JSON, empty phrase lists, blank or non-text phrases, fewer than two intents, and the same phrase listed under different intents (ignoring case) stop training with a message that names the problem. Nothing is saved when the data is invalid.
 
 Use `venv/bin/python`, not plain `python3`, because the E-SHELL dependencies such as `scikit-learn` are installed inside the virtual environment.
 
