@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 from model import predict_intent
+import settings
 
 # These commands are intentionally read-only or very limited.  Dangerous actions
 # such as rm, mv, chmod, chown, sudo, shutdown, reboot, kill, mkfs, and dd are
@@ -31,7 +32,18 @@ BLOCKED_COMMANDS = {
 }
 PROJECT_DIR = Path.cwd().resolve()
 WORKSPACE_DIR = PROJECT_DIR / "workspace"
-ALLOWED_EDITORS = {"nano", "vim"}
+"""
+EDITORS now consist all the editors that can be used from REPL.
+"EDITOR" : { "EditorName": ["cmd"], "type", ""}
+"""
+EDITORS = {
+    "nano": {"command": ["nano"], "gui": False},
+    "vim": {"command": ["vim"], "gui": False},
+    "micro": {"command": ["micro"], "gui": False},
+    "helix": {"command": ["hx"], "gui": False},
+    "emacs": {"command": ["emacs", "-nw"], "gui": False},
+    "gedit": {"command": ["gedit"], "gui": True},
+}
 RUN_TIMEOUT_SECONDS = 10
 APPROVED_RUN_FILES = set()
 
@@ -202,28 +214,106 @@ def parse_words(text):
 
 def handle_edit(words):
     command = words[0].lower()
-    if len(words) == 2 and command == "edit":
-        editor = "nano"
+
+    if len(words) == 2 and command in {"edit", "open"}: # two values to value through
         filename = words[1]
+        editor = choose_default_editor()
     elif len(words) == 4 and command == "open" and words[2].lower() == "in":
         filename = words[1]
         editor = words[3].lower()
-    else:
-        print("Please use: edit filename, open filename in nano, or open filename in vim")
+    else:   # last fallback for Warning & early return
+        print("Use: open filename, edit filename, or open filename in <editor>")
         return
-
-    if editor not in ALLOWED_EDITORS:
-        print("Only nano and vim are allowed editors.")
+        
+    # sanity check for available Editors in EDITORS~
+    if editor not in EDITORS:
+        supported = ", ".join(EDITORS)
+        print(f"Unsupported editor. Supported editors: {supported}.")
         return
 
     path = get_safe_path(filename)
     if not path:
         return
 
+    editor_config = EDITORS[editor]
+    executable = editor_config["command"][0]
+
+    # warn-suggestion if Text editor is available in EDITOR but not on user's system
+    if not shutil.which(executable):
+        print(
+            f"Editor '{editor}' is not installed or is not on PATH. "
+            "Install it with your Linux distribution's package manager, "
+            "or choose another installed editor."
+        )
+        return
+    # display sanity check
+    if editor_config["gui"] and not has_display():
+        print(f"'{editor}' needs a graphical display and none was found. Try nano, vim, or micro.")
+        return
+
+    # taking args to run subprocess ( true cmd )
+    args = [*editor_config["command"], str(path)]
+
     try:
-        subprocess.run([editor, str(path)], check=False)
-    except FileNotFoundError:
-        print(f"⚠️ Editor not available: {editor}")
+        # sanity check for GUI vs Terminal base
+        if editor_config["gui"]:
+            subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                 stderr=subprocess.DEVNULL, start_new_session=True)
+            # with new sessiona and cancels warning prompts
+        else:
+            subprocess.run(args, check=False)
+    except OSError as error:
+        print(f"Could not open {editor}: {error}")
+        return
+
+    record_editor_use(editor)
+
+
+# the best sanity check
+# helpful if somebody is SSH into Linux based machine or using WSLg (wsl2 might give windowsub-pop)
+def has_display():
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+
+
+def choose_default_editor():
+    # if user has set a global default with envVAR
+    override = os.environ.get("E_SHELL_DEFAULT_EDITOR", "").strip().lower()
+    if override in EDITORS and shutil.which(EDITORS[override]["command"][0]):
+        return override
+    
+    # called from settings
+    usage = settings.get("editor_usage")
+    if not isinstance(usage, dict):
+        usage = {}
+    
+    # a Checklist of rules to let editors be actually usa-blegive 
+    usable = {
+        name: count
+        for name, count in usage.items()
+        if name in EDITORS
+        and isinstance(count, int)
+        and count > 0
+        and shutil.which(EDITORS[name]["command"][0])
+        and (not EDITORS[name]["gui"] or has_display())
+    }
+
+    if usable:
+        return max(usable, key=usable.get)
+
+    return "nano"
+
+
+def record_editor_use(name):
+    usage = settings.get("editor_usage")
+    if not isinstance(usage, dict):
+        usage = {}
+
+    count = usage.get(name, 0)
+    if not isinstance(count, int):           
+        count = 0
+
+    usage[name] = usage.get(name, 0) + 1
+    settings.set("editor_usage", usage)
 
 
 def handle_make_executable(words):

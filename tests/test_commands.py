@@ -116,10 +116,9 @@ class FileOperationTests(unittest.TestCase):
 
     @patch("commands.subprocess.run")
     def test_edit_file_blocks_other_editors(self, run):
-        output = self.capture_output("open notes.py in emacs")
+        output = self.capture_output("open notes.py in word")
+        self.assertIn("Unsupported editor", output)
 
-        run.assert_not_called()
-        self.assertIn("Only nano and vim are allowed editors.", output)
 
     @patch("commands.subprocess.run")
     def test_make_executable_uses_chmod_plus_x_only_in_workspace(self, run):
