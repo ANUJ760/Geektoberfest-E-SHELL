@@ -1,5 +1,6 @@
-import json
 import pickle
+
+from intent_data import IntentDataError, load_intents
 
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -13,8 +14,10 @@ except ModuleNotFoundError as error:
         ) from error
     raise
 
-with open("intents.json", "r") as f:
-    intents = json.load(f)
+try:
+    intents = load_intents("intents.json")
+except IntentDataError as error:
+    raise SystemExit(f"Cannot train: {error}")
 
 X = []
 y = []
