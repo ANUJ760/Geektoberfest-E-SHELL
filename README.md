@@ -189,6 +189,8 @@ E-SHELL includes a small standard-library test suite for safe file handling, fal
 venv/bin/python -m unittest discover -s tests -v
 ```
 
+`tests/test_safety_edge_cases.py` covers failure paths: programs that time out, missing tools, cancelled runs, and paths that resolve outside the allowed folder. Each case checks both the message shown to the user and whether a subprocess was started.
+
 To exit E-SHELL:
 
 ```text
