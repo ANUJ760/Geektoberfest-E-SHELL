@@ -88,6 +88,7 @@ E-SHELL supports informational commands plus intentionally limited file actions.
 | `open filename in <editor>` | Opens the file in nano, vim, micro, helix, emacs, gedit, or atom. GUI editors launch in the background. |
 | `make filename executable` | Runs `chmod +x` for a validated file inside `workspace/`. |
 | `run filename` | Runs supported code files inside `workspace/` after asking for confirmation the first time. |
+| `unzip archive.zip` or `extract archive.zip` | Safely extracts a `.zip` from `workspace/` into `workspace/` after checking every entry. |
 | `open_firefox` | Opens Firefox. |
 | `calculator` | Opens the calculator application. |
 
@@ -123,6 +124,18 @@ For file actions, E-SHELL:
 - asks before running a file for the first time because code execution can be unsafe
 - runs code with a 10 second timeout and captures stdout and stderr
 
+### Safe ZIP extraction
+
+`unzip archive.zip` (or `extract archive.zip`) reads a `.zip` file that is already inside `workspace/` and extracts it into `workspace/`. The whole archive is checked before anything is written, and it is refused with a message if any entry is unsafe:
+
+- absolute paths, drive letters, `..` segments, backslashes, null characters, or shell symbols in a name
+- symbolic links and special files, and encrypted entries
+- an entry that would resolve outside `workspace/`, for example through an existing link
+- an entry that would overwrite an existing file, or the same path appearing twice
+- more than 200 entries, or more than 20 MB once unpacked (measured from the archive's contents, so a small archive that expands hugely is refused)
+
+Files are never overwritten, extracted files are not made executable, and nothing is run or approved by extracting. If writing fails part-way, everything written so far is removed. Files inside sub-folders can be extracted, but `run`, `edit` and `make ... executable` still only work on files directly inside `workspace/`.
+
 Supported run types:
 
 | Extension | Command used safely |
@@ -133,6 +146,8 @@ Supported run types:
 | `.java` | `javac filename`, then `java ClassName` |
 | `.js` | `node filename` |
 | `.sh` | `bash filename` |
+| `.go` | `go run filename` |
+| `.rs` | `rustc filename -o filename_without_ext`, then the compiled program |
 
 Examples:
 
@@ -148,6 +163,9 @@ open hello.py in nano
 open hello.py in vim
 make script.sh executable
 run hello.py
+run hello.go
+run hello.rs
+unzip project.zip
 ```
 
 E-SHELL also includes a confidence threshold in `model.py`. If the model is not confident enough about a phrase, it returns `unknown` instead of forcing an unrelated command. In that case E-SHELL runs nothing and replies with a short message suggesting `help` or a rephrased request. Phrases that merely start with a command word (for example `make the computer do something`) get the same response. The `[DEBUG] Predicted intent` line is hidden by default; set `ESHELL_DEBUG=1` to show it.
@@ -201,6 +219,8 @@ E-SHELL includes a small standard-library test suite for safe file handling, fal
 ```bash
 venv/bin/python -m unittest discover -s tests -v
 ```
+
+`tests/test_languages_and_zip.py` covers running `.go` and `.rs` files and the ZIP extraction safety checks.
 
 `tests/test_routing_and_safety.py` covers intent routing (each predicted intent reaches the right handler, and unknown or file-action intents run nothing), blocked commands, filename and path validation, and the confirm-before-run rules.
 
