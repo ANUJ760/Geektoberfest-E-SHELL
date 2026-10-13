@@ -12,6 +12,7 @@ import zipfile
 from pathlib import Path
 
 from model import predict_intent
+from version import __version__, dependency_lines, usage_line
 import settings
 
 # These commands are intentionally read-only or very limited.  Dangerous actions
@@ -182,12 +183,12 @@ Available examples:
   gpu info                battery info            network info
   ip address              logged in users         running processes
   environment info        shell info              python version
-  package manager info    fastfetch info
+  package manager info    fastfetch info          
   touch notes.txt         mkdir examples          cp notes.txt backup.txt
   create file notes.txt   create folder examples  copy notes.txt to backup.txt
   edit hello.py           open hello.py in nano   open hello.py in vim
   make hello.py executable
-  run hello.py            unzip project.zip
+  run hello.py            unzip project.zip       version
 
 File safety rules:
   - Only simple names in the current project directory are allowed.
@@ -828,6 +829,25 @@ def show_package_manager_info():
     print("Detected package manager(s): " + ", ".join(found) if found else "No common package manager detected.")
 
 
+def handle_version():
+    model_files = ["intent_model.pkl", "vectorizer.pkl"]
+    found = all((Path(PROJECT_DIR) / f).exists() for f in model_files)
+
+    # whole custom printing stash
+    lines = [
+        f"E-SHELL v{__version__}",
+        f"Python {platform.python_version()} ({sys.executable})",
+        f"OS: {platform.platform()}",
+        "",
+        "Dependencies:",
+        *[f"  {line}" for line in dependency_lines()],
+        "",
+        f"Model files: {'found' if found else 'MISSING'}",
+        f"Project dir: {PROJECT_DIR}",
+        usage_line(),
+    ]
+    print("\n".join(lines))
+
 def show_fastfetch_info():
     if shutil.which("fastfetch"):
         run_command(["fastfetch"])
@@ -900,7 +920,10 @@ def handle_command(text):
         return
 
     intent = predict_intent(text)
-    if os.environ.get("ESHELL_DEBUG"):
+    DEBUG = os.environ.get("ESHELL_DEBUG", "").lower() in {"1", "true", "yes", "on"}
+    print(DEBUG)
+
+    if DEBUG: 
         print(f"[DEBUG] Predicted intent: {intent}")
 
     handlers = {
@@ -928,6 +951,7 @@ def handle_command(text):
         "python_version": show_python_version,
         "package_manager_info": show_package_manager_info,
         "fastfetch_info": show_fastfetch_info,
+        "version": handle_version,
     }
 
     handler = handlers.get(intent)
