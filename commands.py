@@ -900,7 +900,9 @@ def handle_command(text):
         return
 
     intent = predict_intent(text)
-    if os.environ.get("ESHELL_DEBUG"):
+    DEBUG = os.environ.get("ESHELL_DEBUG", "").lower() in {"1", "true", "yes", "on"}
+
+    if DEBUG:
         print(f"[DEBUG] Predicted intent: {intent}")
 
     handlers = {
