@@ -1,0 +1,208 @@
+{
+  "list_files": [
+    "ls",
+    "what is in this folder",
+    "show me the files",
+    "list all files here",
+    "files in this directory"
+  ],
+  "current_dir": [
+    "print working directory",
+    "which folder am i in",
+    "show me where i am",
+    "what directory is this",
+    "current location"
+  ],
+  "disk_usage": [
+    "how much disk space is left",
+    "check disk space",
+    "storage left",
+    "show free storage",
+    "hard drive usage"
+  ],
+  "memory_usage": [
+    "how much ram is free",
+    "check memory",
+    "ram status",
+    "show memory",
+    "memory consumption"
+  ],
+  "date_time": [
+    "what is today's date",
+    "tell me the time",
+    "show current time and date",
+    "what day is it",
+    "clock"
+  ],
+  "open_firefox": [
+    "launch firefox",
+    "open the browser",
+    "start firefox",
+    "open web browser",
+    "firefox please"
+  ],
+  "calculator": [
+    "launch calculator",
+    "open the calculator",
+    "start the calculator app",
+    "calculator",
+    "i need a calculator"
+  ],
+  "system_uptime": [
+    "how long has this machine been up",
+    "show system uptime",
+    "since when is the system running",
+    "time since boot",
+    "how long since reboot"
+  ],
+  "kernel_info": [
+    "which kernel is running",
+    "what kernel version do i have",
+    "show linux kernel version",
+    "kernel",
+    "display kernel information"
+  ],
+  "cpu_info": [
+    "tell me about my processor",
+    "what cpu do i have",
+    "show cpu model and cores",
+    "processor",
+    "how many cpu cores"
+  ],
+  "current_user": [
+    "who is the current user",
+    "what is my user name",
+    "show logged in username",
+    "which account am i using",
+    "tell me my user"
+  ],
+  "hostname": [
+    "what is the name of this machine",
+    "show computer name",
+    "what's my hostname",
+    "name of this device",
+    "print hostname"
+  ],
+  "os_info": [
+    "which linux distribution is this",
+    "what os am i running",
+    "show operating system",
+    "os version",
+    "distro name"
+  ],
+  "gpu_info": [
+    "what graphics card do i have",
+    "show video card",
+    "graphics card",
+    "tell me about my gpu",
+    "which gpu is installed"
+  ],
+  "battery_info": [
+    "how much charge is left",
+    "show battery percentage",
+    "is the laptop charging",
+    "battery",
+    "check my battery"
+  ],
+  "network_info": [
+    "show network interfaces",
+    "list network adapters",
+    "network settings",
+    "show my wifi details",
+    "display network information"
+  ],
+  "ip_address": [
+    "what's my ip address",
+    "show my local ip",
+    "tell me my ip address",
+    "display ip",
+    "get ip address"
+  ],
+  "logged_in_users": [
+    "who else is logged in",
+    "show who is online",
+    "list logged in users",
+    "currently logged in users",
+    "which users are connected"
+  ],
+  "running_processes": [
+    "what processes are running",
+    "show me running processes",
+    "which programs are using memory",
+    "list running programs",
+    "show top processes"
+  ],
+  "environment_info": [
+    "show environment variables",
+    "print env",
+    "list environment variables",
+    "what are my environment settings",
+    "display env"
+  ],
+  "shell_info": [
+    "which shell is this",
+    "what shell do i use",
+    "show my default shell",
+    "tell me the current shell",
+    "shell name"
+  ],
+  "python_version": [
+    "what version of python is installed",
+    "show me the python version",
+    "python3 --version",
+    "check python3 version",
+    "which python do i have"
+  ],
+  "package_manager_info": [
+    "which package manager do i have",
+    "what package manager is available",
+    "show package managers",
+    "is apt installed",
+    "detect installed package manager"
+  ],
+  "fastfetch_info": [
+    "show system information summary",
+    "run neofetch",
+    "give me a system overview",
+    "fastfetch",
+    "display a summary of this computer"
+  ],
+  "edit_file": [
+    "edit hello.py",
+    "open main.py in nano",
+    "edit the file",
+    "open script.py in vim",
+    "open readme.txt"
+  ],
+  "make_executable": [
+    "make run.sh executable",
+    "give the script execute permission",
+    "make this file executable",
+    "set the execute bit",
+    "make the script executable"
+  ],
+  "run_file": [
+    "run main.py",
+    "execute script.py",
+    "run the file",
+    "execute the program",
+    "run test.js"
+  ],
+  "unknown": [
+    "make the computer do something",
+    "what is the meaning of life",
+    "tell me a joke",
+    "order a pizza",
+    "delete everything",
+    "send an email to bob",
+    "play some music",
+    "how do i cook rice",
+    "asdf qwerty",
+    "translate this to french",
+    "what is the weather today",
+    "shut the computer down",
+    "install a new program",
+    "write me a poem",
+    "zzzz"
+  ]
+}

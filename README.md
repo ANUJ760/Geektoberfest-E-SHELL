@@ -48,6 +48,9 @@ commands.py runs the matching safe command
 | `workspace/` | Safe folder for files that can be edited, made executable, or run. |
 | `train.py` | Trains the classifier from the phrases in `intents.json`. |
 | `intent_data.py` | Checks `intents.json` for problems before training. |
+| `evaluation_phrases.json` | Held-out test phrases, kept separate from `intents.json`, used only to measure the model. |
+| `evaluate.py` | Scores the saved model on the held-out phrases and writes a report. |
+| `docs/model-evaluation.md` | The latest evaluation report. |
 | `model.py` | Loads the saved model and predicts the intent for new user input. |
 | `vectorizer.pkl` | Saved TF-IDF vectorizer created during training. |
 | `intent_model.pkl` | Saved trained intent classifier. |
@@ -230,6 +233,43 @@ To exit E-SHELL:
 exit
 ```
 
+## Evaluating the model
+
+`evaluate.py` measures the saved model on phrases it was **not** trained on (`evaluation_phrases.json`), so the score reflects new wording and not memorised examples:
+
+```bash
+venv/bin/python evaluate.py                                      # print the report
+venv/bin/python evaluate.py --markdown docs/model-evaluation.md  # also save it
+```
+
+The report ([docs/model-evaluation.md](docs/model-evaluation.md)) lists overall accuracy with a 95% interval, results for each intent, the most confused intent pairs, the supported phrases the model did not recognise, and whether out-of-scope requests were refused. It separates two kinds of miss: a phrase that is **not recognised** (E-SHELL shows the help message) and a phrase answered with the **wrong command** (the costly one).
+
+Latest results on 150 hand-written phrases (135 supported requests, 15 out-of-scope requests):
+
+- 95 of 135 (70.4%) supported requests were understood.
+- 8 (5.9%) got the wrong command, and 32 (23.7%) were not recognised.
+- 15 of 15 out-of-scope requests were correctly refused.
+- Without the confidence threshold the top-ranked intent would be right for 114 of 135 (84.4%), so the threshold trades some understanding for fewer wrong commands.
+- Intents with the fewest training phrases do worst: `calculator` (2 training phrases), `open_firefox` (3 training phrases) were never understood, and phrases such as "open the browser" were pulled towards `edit_file`, which has far more training phrases.
+
+These numbers come from a small hand-written set. One phrase moves the overall figure by less than a point, so treat small differences between runs as noise.
+
+### Adding examples without overstating the model
+
+1. Add the phrase to the right intent in `intents.json`. Training checks the file and stops with a message if the same phrase is listed under two intents.
+2. Retrain with `venv/bin/python train.py`.
+3. To measure the effect, add a few **differently worded** phrases for that intent to `evaluation_phrases.json`. Never copy a training phrase into it: `evaluate.py` refuses to run if a test phrase was also trained on. Out-of-scope requests that might be confused with the new intent go under `"unknown"`.
+4. Re-run `venv/bin/python evaluate.py --markdown docs/model-evaluation.md` and commit the updated report with your change.
+
+When you report results:
+
+- Quote the score on held-out phrases, never on the training phrases. The model has seen those, so the score only shows it remembered them.
+- Give the number of phrases. With a set this small, a change of a few points is not evidence of improvement.
+- Report the **wrong command** and **out-of-scope refused** figures as well as the headline accuracy. Do not lower `MIN_CONFIDENCE` just to raise accuracy: it recovers some phrases but lets more wrong commands through.
+- Do not present the probabilities as certainty. They are small because they are spread across every intent, and they are not calibrated: 0.30 does not mean a 30% chance of being right.
+- Keep intents roughly balanced. A large intent such as `edit_file` can absorb phrases that belong elsewhere.
+- Accuracy never replaces the safety checks. Blocked commands, name validation and the confirmation before running code apply no matter what the model predicts.
+
 ## Example phrases to try
 
 ```text
@@ -296,6 +336,7 @@ E-SHELL exits normally when the user types `exit`:
 ## Current limitations
 
 - The model is trained on a small number of example phrases, so its vocabulary is still limited.
+- Measured results, including the phrases it misses, are in [docs/model-evaluation.md](docs/model-evaluation.md).
 - It is designed for Linux systems and uses Linux-specific commands.
 - It is a lightweight classifier-based shell, not a large conversational AI model.
 
