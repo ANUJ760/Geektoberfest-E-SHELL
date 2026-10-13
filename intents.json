@@ -92,6 +92,12 @@
     "system kernel info",
     "kernel release"
   ],
+  "version": [
+    "version",
+    "tell version",
+    "VERSION",
+    "shell version"
+  ],
   "cpu_info": [
     "cpu info",
     "processor details",
