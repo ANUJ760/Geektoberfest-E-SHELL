@@ -188,6 +188,12 @@ cd E-SHELL
 venv/bin/python train.py
 ```
 
+`train.py` resolves its input and output paths relative to its own script location, so you can also invoke it from any working directory:
+
+```bash
+venv/bin/python /path/to/E-SHELL/train.py
+```
+
 Before training, `intents.json` is checked. Malformed JSON, empty phrase lists, blank or non-text phrases, fewer than two intents, and the same phrase listed under different intents (ignoring case) stop training with a message that names the problem. Nothing is saved when the data is invalid.
 
 Use `venv/bin/python`, not plain `python3`, because the E-SHELL dependencies such as `scikit-learn` are installed inside the virtual environment.
